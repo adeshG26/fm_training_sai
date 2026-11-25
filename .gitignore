@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# local uv install
+bin/
+
+# Data folder (root only — leading slash so it doesn't hide pragmatiq/pragmatiq/data source code)
+/data/
+
+# Data files anywhere
+*.parquet
+*.lmdb
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# Notebook checkpoints
+.ipynb_checkpoints/

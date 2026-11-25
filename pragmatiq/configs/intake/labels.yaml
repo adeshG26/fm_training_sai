@@ -1,0 +1,39 @@
+# Forecast labels built from the client tables (pragmatiq intake labels).
+#
+# The cut leaves 24 months of history (2025-10-01 .. 2027-10-01) and a full
+# 12-month outcome window (.. 2028-09-30) inside the data. Histories are
+# truncated at eval_ts before embedding, so no outcome leaks into the input.
+eval_ts: "2027-10-01"
+
+population:
+  min_events: 1          # score every customer with any history before the cut
+
+tasks:
+  # Serious delinquency: any product reaches 90+ days past due within 12 months.
+  # The name matches pragmatiq's built-in default_12m contract.
+  default_12m:
+    table: product_snapshot
+    entity: customer_id
+    time: snapshot_date
+    where: "days_delinquent >= 90"
+    horizon_days: 365
+    exclude_prior: true    # already 90+ DPD at the cut = not a forecast
+
+  # Early delinquency / collections entry within 12 months.
+  collections_12m:
+    table: collections_case
+    entity: customer_id
+    time: case_open_timestamp
+    where: "case_open_dpd >= 1"
+    horizon_days: 365
+    exclude_prior: true
+
+  # A fraud alert escalated to a case within 12 months. Named fraud_12m because
+  # pragmatiq's built-in `fraud` task is event-level (user_id, ts, label).
+  fraud_12m:
+    table: fraud_case
+    entity: customer_id
+    time: case_open_timestamp
+    where: "fraud_case_id IS NOT NULL"
+    horizon_days: 365
+    exclude_prior: false   # past fraud does not make future fraud a non-question
